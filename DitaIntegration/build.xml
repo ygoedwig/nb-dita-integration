@@ -5,4 +5,9 @@
 <project name="DitaIntegration" basedir=".">
     <description>Builds the module suite DitaIntegration.</description>
     <import file="nbproject/build-impl.xml"/>
+    <target name="publish-update-centre" depends="nbms"> 
+        <copy todir=""> 
+            <fileset dir="${build.dir}/updates" includes="licenses/**,*.nbm,updates.xml"/>
+        </copy>
+    </target>
 </project>
