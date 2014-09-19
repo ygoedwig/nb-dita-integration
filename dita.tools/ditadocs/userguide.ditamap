@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE map PUBLIC "-//OASIS//DTD DITA Map//EN"
+"../dtd/technicalContent/dtd/map.dtd">
+<map title="DITA in Netbeans Documentation">
+    <topicmeta>
+        <author>Matt Wood</author>
+    </topicmeta>
+    <!-- Note that these pages have a navtitle that is used in the tree of the javahelp browser but the
+    page needs the full title since it will be reached directly from F1-->
+    <topichead navtitle="DITA" >
+
+        <topicref href="introduction.dita" type="topic"/>
+        <topicref href="getting-started.dita" type="topic"/>
+        <topicref href="nbintegration.dita" type="topic"/>
+        
+        <!-- Used to group topics -->        
+        <!--topichead navtitle="New Level">
+            <topicref href="topic1.dita" type="topic"/>                
+            <topicref href="topic2.dita" navtitle="Change History" locktitle="yes" type="topic"/>                
+        </topichead-->
+    </topichead>
+</map>

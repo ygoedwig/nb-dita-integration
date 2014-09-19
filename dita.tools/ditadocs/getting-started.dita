@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN"
+"../../dtd/topic.dtd">
+<topic id="getting-started" xml:lang="en-us" >
+    <title>Getting Started with DITA</title>
+    <body>
+        <section>
+            <title>Getting Started</title>
+            <p>
+                Before starting the DITA Open Toolkit is needed and can be downloaded from
+                the site linked below.
+            </p>
+        </section>
+        <section>
+            <title>Useful links</title>
+            <ol>
+                <li>
+                    <xref href="http://dita-ot.sourceforge.net/" scope="external">DITA Open Toolkit</xref>
+                    This toolkit is used to process the dita xml into the required document format.
+                </li>
+            </ol>
+
+        </section>
+    </body>
+</topic>

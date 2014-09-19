@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="dita-master-build" basedir="..">
+    <!-- Master version 1.0 -->
+    <macrodef name="propertycopy">
+        <attribute name="name"/>
+        <attribute name="base"/>
+        <attribute name="ext"/>
+        <sequential>
+            <property name="temp" value="${@{base}}.@{ext}"/>
+            <property name="@{name}" value="${temp}"/>
+        </sequential>
+    </macrodef>
+
+    <macrodef name="resolveProperty">
+        <attribute name="property" />
+        <attribute name="value" />
+        <sequential>
+            <property name="tmp1.@{property}" value="${dita-target}.@{value}" />
+            <resolveProperty2 property="@{property}" value="${tmp1.@{property}}" />
+        </sequential>
+    </macrodef>
+
+    <macrodef name="resolveProperty2">
+        <attribute name="property" />
+        <attribute name="value" />
+        <sequential>
+            <property name="@{property}" value="${@{value}}" />
+        </sequential>
+    </macrodef>
+
+    <target name="single" description="Builds a single ditamap.">
+        <fail unless="dita-target" message="The dita-target must be defined."/>
+        <property file="nbproject/dita.properties"/>
+        <resolveProperty property="format" value="format"/>
+        <ant target="compile-format"/>
+    </target>
+
+    <target name="compile-format">
+        <condition property="is.xhtml" value="true">
+            <equals arg1="${format}" arg2="xhtml" />
+        </condition>
+        <condition property="is.pdf" value="true">
+            <equals arg1="${format}" arg2="pdf" />
+        </condition>
+        <ant target="compile-xhtml"/>
+        <ant target="compile-pdf"/>
+    </target>
+
+    <target name="compile-xhtml" if="is.xhtml">
+        <ant target="compile-dita">
+            <property name="args.input" value="${basedir}/${dita-target}.ditamap"/>
+            <property name="output.dir" value="${basedir}/build"/>
+            <property name="transtype" value="${format}"/>
+        </ant>
+        <copy file="nbproject/index.html" todir="${basedir}/build/xhtml" overwrite="true"/>
+    </target>
+
+    <target name="compile-pdf" if="is.pdf">
+        <ant target="compile-dita">
+            <property name="args.input" value="${basedir}/${dita-target}.ditamap"/>
+            <property name="output.dir" value="${basedir}/build"/>
+            <property name="transtype" value="${format}"/>
+        </ant>
+        <copy file="${basedir}/build/${format}/${dita-target}.${format}" todir="${basedir}"/>
+    </target>
+
+    <target name="build-all" description="Builds the all documentation." >
+        <property file="nbproject/dita.properties"/>
+        <script language="javascript">
+            var ditamaps = project.getProperty("ditamaps")
+            var parts = ditamaps.split(":")
+            var basedir = project.getProperty("basedir")
+            for each (var ditamap in parts) {
+            var active = project.getProperty(ditamap+".active")
+            var name = project.getProperty(ditamap+".name")
+            if(active == "true") {
+            println("Building "+name)
+            var fullpath = basedir+"/"+ditamap+".ditamap"
+            var format = project.getProperty(ditamap+".format")
+            project.setProperty("ditamapfile",fullpath)
+            project.setProperty("ditamap.basename",ditamap)
+            project.setProperty("format",format)
+            println("Building "+fullpath)
+            project.executeTarget("build-single")
+            }
+            }
+        </script>
+    </target>
+
+    <!-- This tries to identify the module directory to copy the java help into -->
+    <!-- Normally the documentation project is one directory below the module.  -->
+    <target name="init-javahelp">
+         <loadfile srcfile="../manifest.mf" property="module.codebase">
+            <filterchain>
+                <linecontains>
+                    <contains value="OpenIDE-Module: "/>
+                </linecontains>
+                <striplinebreaks/>
+                <replaceregex pattern="OpenIDE-Module: "></replaceregex>
+                <replacestring from="." to="/"/>
+            </filterchain>
+        </loadfile>
+        <property name="javahelp.dita.dir" value="${basedir}/build/javahelp"/>
+        <replaceStringWithRegExp string="${ant.project.name}"
+                                 searchPattern="\."
+                                 replacementPattern="\\\\"
+                                 property="ant.project.name.path"/>
+        <property name="javahelp.dir" value="../javahelp/${module.codebase}/docs"/>
+    </target>
+
+    <target name="build-userdocs" description="Builds the user documentation into JavaHelp.">
+        <ant target="compile-dita">
+            <property name="args.input" value="${ditamapfile}"/>
+            <property name="output.dir" value="${basedir}/build"/>
+            <property name="transtype" value="javahelp"/>
+            <property name="args.css" value="${basedir}/nbproject/javahelp.css"/>
+            <property name="args.csspath" value="css"/>
+            <property name="args.copycss" value="yes"/>
+        </ant>
+        <ant target="fix-css-html"/>
+        <ant target="convert-2-javahelp2"/>
+        <ant target="copy-to-javahelp-dir"/>
+    </target>
+
+    <target name="build-single" description="Builds a single ditamap.">
+        <ant target="compile-dita">
+            <property name="args.input" value="${ditamapfile}"/>
+            <property name="output.dir" value="${basedir}/build"/>
+            <property name="transtype" value="${format}"/>
+        </ant>
+        <copy file="${basedir}/build/${format}/${ditamap.basename}.${format}" todir="${basedir}"/>
+    </target>
+
+    <target name="compile-dita">
+        <property name="args.csspath" value="css"/>
+        <property name="args.copycss" value="no"/>
+        <fail unless="dita.dir" message="Missing definition of dita.dir. See Tools->Options->DITA"/>
+        <condition property="invalid.dita.dir">
+            <not>
+                <available file="${dita.dir}" type="dir"/>
+            </not>
+        </condition>
+        <fail if="invalid.dita.dir" message="Missing definition of dita.dir. Check Tools->Options->DITA"/>
+
+        <java dir="${dita.dir}" classname="org.apache.tools.ant.launch.Launcher" fork="true" failonerror="true">
+            <classpath path="${java.class.path}">
+                <pathelement path="${dita.dir}/lib/dost.jar"/>
+                <pathelement path="${dita.dir}/lib/commons-codec-1.4.jar"/>
+                <pathelement path="${dita.dir}/lib/resolver.jar"/>
+                <pathelement path="${dita.dir}/lib/icu4j.jar"/>
+                <pathelement path="${dita.dir}/lib/xml-apis.jar"/>
+                <pathelement path="${dita.dir}/lib/xercesImpl.jar"/>
+                <pathelement path="${dita.dir}/lib/saxon/saxon9.jar"/>
+                <pathelement path="${dita.dir}/lib/saxon/saxon9-dom.jar"/>
+            </classpath>
+            <sysproperty key="args.input" value="${args.input}"/>
+            <sysproperty key="dita.temp.dir" value="${basedir}/build/temp"/>
+            <sysproperty key="output.dir" value="${output.dir}/${transtype}"/>
+            <sysproperty key="transtype" value="${transtype}"/>
+            <sysproperty key="args.css" value="${args.css}"/>
+            <sysproperty key="args.csspath" value="${args.csspath}"/>
+            <sysproperty key="args.copycss" value="${args.copycss}"/>
+            <sysproperty key="args.xhtml.toc" value="toc"/>
+            <!--sysproperty key="args.javahelp.toc" value="toc"/>
+            <sysproperty key="args.javahelp.map" value="map"/-->
+            <sysproperty key="javax.xml.transform.TransformerFactory" value="net.sf.saxon.TransformerFactoryImpl"/>
+        </java>
+    </target>
+
+    <target name="clean" description="Clean all compiled documentation.">
+        <delete dir="${basedir}/build"/>
+    </target>
+
+    <target name="test-userdocs" description="Tests the content with the JavaHelp GUI" depends="build-userdocs">
+        <!--copy file="javahelp.css" todir="build/javahelp/CSS"/-->
+        <java jar="C:\home\u415714\phobos\phobos-svn-trunk\tools\hsviewer.jar" fork="true">
+            <arg line="-helpset ${javahelp.dita.dir}/userdocs_helpset.hs"/>
+        </java>
+    </target>
+
+    <target name="zip-doc-src" description="Zips the documentation source">
+        <replaceStringWithRegExp string="${ant.project.name}"
+                                 searchPattern="\."
+                                 replacementPattern="-"
+                                 property="ant.project.name.dashes"/>
+        <zip destfile="${basedir}/${ant.project.name.dashes}-src.zip" >
+            <fileset dir="." excludes="build/**,temp/**"/>
+        </zip>
+    </target>
+
+    <target name="check-for-javahelp" >
+        <condition property="has.javahelp.dir">
+            <available file="../javahelp"/>
+        </condition>
+    </target>
+    <macrodef name="replaceStringWithRegExp">
+        <attribute name="string"/>
+        <attribute name="searchPattern"/>
+        <attribute name="replacementPattern"/>
+        <attribute name="property"/>
+        <sequential>
+            <tokens id="id">
+                <concat>
+                    <string value="@{string}"/>
+                    <filterchain>
+                        <tokenfilter>
+                            <replaceregex pattern="@{searchPattern}"
+                                          replace="@{replacementPattern}"
+                                          flags="g"/>
+                        </tokenfilter>
+                    </filterchain>
+                </concat>
+            </tokens>
+            <property name="@{property}" value="${toString:id}"/>
+        </sequential>
+    </macrodef>
+    <target name="copy-to-javahelp-dir" depends="init-javahelp,check-for-javahelp" if="has.javahelp.dir">
+
+        <copy todir="${javahelp.dir}">
+            <fileset dir="${javahelp.dita.dir}">
+                <include name="**/*.html"/>
+                <include name="**/images/**"/>
+                <include name="css/javahelp.css"/>
+                <include name="css/commonltr.css"/>
+            </fileset>
+        </copy>
+        <copy file="${javahelp.dita.dir}/${ditamap.basename}.jhm" tofile="${javahelp.dir}/dita-map.xml"/>
+        <copy file="${javahelp.dita.dir}/${ditamap.basename}.xml" tofile="${javahelp.dir}/dita-toc.xml"/>
+        <copy file="${javahelp.dita.dir}/${ditamap.basename}_index.xml" tofile="${javahelp.dir}/dita-idx.xml"/>
+        <copy file="${javahelp.dita.dir}/${ditamap.basename}_helpset.hs" tofile="${javahelp.dir}/dita-hs.xml"/>
+        <replaceregexp flags="g" file="${javahelp.dir}/dita-hs.xml" match="${ditamap.basename}\.jhm" replace="dita-map.xml"/>
+        <replaceregexp flags="g" file="${javahelp.dir}/dita-hs.xml" match="${ditamap.basename}.xml" replace="dita-toc.xml"/>
+        <replaceregexp flags="g" file="${javahelp.dir}/dita-hs.xml" match="${ditamap.basename}_index.xml" replace="dita-idx.xml"/>
+    </target>
+    <!-- The following replaces class='title classname' with class='classname' as
+    the former doesn't work in javahelp-->
+    <target name="fix-css-html" depends="init-javahelp">
+        <replaceregexp
+            flags="g">
+            <regexp pattern="class=&quot;\w+ (\w+)&quot;"  />
+            <substitution expression="class=&quot;\1&quot;"/>
+            <fileset dir="${javahelp.dita.dir}" includes="**/*.html"/>
+        </replaceregexp>
+    </target>
+
+    <target name="convert-2-javahelp2" depends="init-javahelp">
+        <replaceregexp
+            flags="g">
+            <regexp pattern="helpset version=&quot;1.0&quot;"/>
+            <substitution expression="helpset version=&quot;2.0&quot;"/>
+            <fileset dir="${javahelp.dita.dir}" includes="userdocs_helpset.hs"/>
+        </replaceregexp>
+        <replaceregexp
+            flags="g">
+            <regexp pattern="index version=&quot;1.0&quot;"/>
+            <substitution expression="index version=&quot;2.0&quot;"/>
+            <fileset dir="${javahelp.dita.dir}" includes="userdocs_index.xml"/>
+        </replaceregexp>
+        <replaceregexp
+            flags="g">
+            <regexp pattern="map version=&quot;1.0&quot;"/>
+            <substitution expression="map version=&quot;2.0&quot;"/>
+            <fileset dir="${javahelp.dita.dir}" includes="userdocs.jhm"/>
+        </replaceregexp>
+        <replaceregexp
+            flags="g">
+            <regexp pattern="HelpSet Version 1.0"/>
+            <substitution expression="HelpSet Version 2.0"/>
+            <fileset dir="${javahelp.dita.dir}" includes="userdocs_helpset.hs"/>
+        </replaceregexp>
+        <replaceregexp
+            flags="g">
+            <regexp pattern="Index Version 1.0"/>
+            <substitution expression="Index Version 2.0"/>
+            <fileset dir="${javahelp.dita.dir}" includes="userdocs_index.xml"/>
+        </replaceregexp>
+        <replaceregexp
+            flags="g">
+            <regexp pattern="Map Version 1.0"/>
+            <substitution expression="Map Version 2.0"/>
+            <fileset dir="${javahelp.dita.dir}" includes="userdocs.jhm"/>
+        </replaceregexp>
+        <replaceregexp
+            flags="g">
+            <regexp pattern="helpset_1_0"/>
+            <substitution expression="helpset_2_0"/>
+            <fileset dir="${javahelp.dita.dir}" includes="userdocs_helpset.hs"/>
+        </replaceregexp>
+        <replaceregexp
+            flags="g">
+            <regexp pattern="index_1_0"/>
+            <substitution expression="index_2_0"/>
+            <fileset dir="${javahelp.dita.dir}" includes="userdocs_index.xml"/>
+        </replaceregexp>
+        <replaceregexp
+            flags="g">
+            <regexp pattern="map_1_0"/>
+            <substitution expression="map_2_0"/>
+            <fileset dir="${javahelp.dita.dir}" includes="userdocs.jhm"/>
+        </replaceregexp>
+        <replaceregexp
+            flags="g">
+            <regexp pattern="map_1_0"/>
+            <substitution expression="map_2_0"/>
+            <fileset dir="${javahelp.dita.dir}" includes="userdocs.jhm"/>
+        </replaceregexp>
+        <replaceregexp
+            flags="g">
+            <regexp pattern="&lt;label&gt;TOC&lt;\/label&gt;"/>
+            <substitution expression="&lt;label&gt;Table of Contents&lt;\/label&gt;"/>
+            <fileset dir="${javahelp.dita.dir}" includes="userdocs_helpset.hs"/>
+        </replaceregexp>
+    </target>
+
+    <target name="javahelp" depends="init-javahelp">
+        <property name="harness.dir" value="/opt/netbeans/NetBeans6.8/harness"/>
+        <!-- Similar to projectized.xml but does not fiddle with usersguide/.../ide.css, and finds jhall.jar differently: -->
+        <property name="jhall.jar" location="${harness.dir}/antlib/jsearch-2.0_05.jar"/>
+        <available property="jhall.jar.exists" file="${jhall.jar}"/>
+        <fail unless="jhall.jar.exists">You must set 'jhall.jar' (e.g. in private.properties) to the location of jsearch.jar from a JavaHelp distribution</fail>
+        <mkdir dir="${javahelp.dita.dir}/JavaHelpSearch"/>
+        <typedef name="jhindexer"
+                 classname="org.netbeans.nbbuild.JHIndexer">
+            <classpath>
+                <pathelement location="${jhall.jar}"/>
+                <pathelement location="${harness.dir}/tasks.jar"/>
+            </classpath>
+        </typedef>
+        <jhindexer basedir="${javahelp.dita.dir}"
+                   db="${javahelp.dita.dir}/JavaHelpSearch">
+            <classpath>
+                <pathelement location="${jhall.jar}"/>
+                <pathelement location="${harness.dir}/tasks.jar"/>
+            </classpath>
+            <include name="**/*.html"/>
+            <include name="**/*.htm"/>  <!-- Fix for Issue #160276 -->
+            <exclude name="${javahelp.search}/"/>
+            <exclude name="${javahelp.excludes}"/>
+        </jhindexer>
+    </target>
+</project>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN"
+"../../dtd/topic.dtd">
+<topic id="ss-changehistory" xml:lang="en-us">
+    <title>Change History</title>
+
+    <body>
+         <section>
+            <title>Version 1.6</title>
+            <ol>
+                <li>Changed default x and y to NotSet to force user to choose.</li>
+                <li>Fix to clear additional scan information when curve is changed.</li>
+            </ol>
+        </section>
+        <section>
+            <title>Version 1.5</title>
+            <ol>
+                <li>Changed Assign Rating logic to only affect the selected scans.</li>
+                <li>Help comments from NB.</li>
+            </ol>
+        </section>
+        <section>
+            <title>Version 1.4</title>
+            <ol>
+                <li>Minor change to sizing of UI</li>
+                <li>Added DITA generated javahelp.</li>
+            </ol>
+        </section>
+        <section>
+            <title>Version 1.2 - Changes due to user feedback from NB 19/5/12.</title>
+            <ol>
+                <li>Rating display of syntax Rating x in drop down sub-menu list on table and within table Rating cell instead of RATINGx</li>
+                <li>Fix NPE when X or Y parameter is NotSet and the table cells are editted.</li>
+            </ol>
+        </section>
+        <section>
+            <title>Version 1.2 - Changes due to user feedback from NB 18/5/12.</title>
+            <ol>
+                <li>Updated logic to only use scans with applied rating to be plotted/fitted</li>
+                <li>There are now 10 Rating groups</li>
+                <li>Column Ordering on pressing headers. This can be multiple sorting if you hold CTRL and press another column header.</li>
+                <li>Right Click on selected rows in table:</li>
+                <li>Set Ratings - for the selected rows from the drop down menu.  This will unselect any user selected additional scans in the last column.</li>
+                <li>Select/Unselect - for the selected rows if there is no Rating set then these can be set as selected/unselected.</li>
+                <li>Button added "Assign Auto Ratings" - this scrolls through the selected data and assigns any parameters with the syntax Pxx where xx takes the value 1 -> 10.</li>
+                <li>Button labelling updated to "Select Best Fit Scans" and tooltiptext</li>
+                <li>Tooltiptexts added to buttons as defined by user requirement.</li>
+                <li>Column Header "Rating Grp" updated to "Rating Group"</li>
+                <li>Column Header "Best Scan" updated to "Selected Scans"</li>
+                <li>Column "Selected Scans" is editable for rows now not just those with ratings, this allows additional non-rated rows to be included in the output curve but not included in the plotting or fitting of the data.</li>
+                <li>Added ToolTip text to column headers.</li>
+            </ol>
+        </section>
+        <section>
+            <title>Version 1.1 - Changes due to user feedback from NB 18/4/12.</title>
+            <ol>
+                <li>Change title of profile.</li>
+                <li>Change behavior of filing to ensure curve is filed to the same experiment.</li>
+                <li>Fixed the loss of the output curve name and renamed fields and methods to OuputCurveName</li>
+                <li>Added parser logic to read FitOrder.</li>
+                <li>Put table and chart into tab panel and made bigger to ensure more space allocated in profile window.</li>
+                <li>Swapped content of last two columns so IsUsed is right most.</li>
+                <li>Added column to table to show the value of MEP.</li>
+                <li>Disable the graph interactivity.</li>
+                <li>Change curve creation to reference input curve and not copy it.</li>
+                <li>Fixed MinErrors to update table and enable save if changes made.</li>
+                <li>Changed the default value of isUsedInFit from true to false to avoid line fit error.</li>
+                <li>Changed the title of the button to 'Select best scans' and added tooltip.</li>
+                <li>Removed isUsedInFit column and changed isSelected column to Best Scan</li>
+                <li>Set selection scan to be not editable until rating group defined.</li>
+                <li>Add catch for error in -1 array index from linefitmethods so extract is added, problem still exists.</li>
+            </ol>
+        </section>
+        <section>
+            <title>Version 1.0 - Initial version.</title>
+            <ol>
+                <li>Based on qs01 exec file.</li>
+            </ol>
+        </section>
+    </body>
+</topic>

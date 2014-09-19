@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+OpenIDE-Module: org.wood.bulkeditor
+OpenIDE-Module-Layer: org/wood/bulkeditor/layer.xml
+OpenIDE-Module-Localizing-Bundle: org/wood/bulkeditor/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.2.1
+

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
+<filesystem>
+    <folder name="Menu">
+        <folder name="Tools">
+            <file name="org-netbeans-modules-dita-catalog-DITAActionXX.shadow">
+                <attr name="originalFile" stringvalue="Actions/Tools/org-netbeans-modules-dita-catalog-DITAAction.instance"/>
+                <attr name="position" intvalue="10"/>
+            </file>
+        </folder>
+    </folder>
+    <folder name="xml">
+        <folder name="catalogs">
+            <file name="UserXMLCatalogX.xml" url="UserXMLCatalogX.xml"/>
+        </folder>
+    </folder>
+    <!--folder name="Services">
+        <folder name="JavaHelp">
+            <file name="dita-helpset.xml" url="dita-helpset.xml">
+                <attr name="position" intvalue="3553"/>
+            </file>
+        </folder>
+    </folder-->
+</filesystem>

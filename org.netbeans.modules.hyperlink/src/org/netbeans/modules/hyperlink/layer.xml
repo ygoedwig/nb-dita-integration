@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.2//EN" "http://www.netbeans.org/dtds/filesystem-1_2.dtd">
+<filesystem>
+    <folder name="Editors">
+        <folder name="text">
+            <folder name="dita+xml">
+                <folder name="HyperlinkProviders">
+                    <file name="DitaHyperLinkProvider.instance">
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.hyperlink.ImageHyperLink"/>
+                        <attr name="instanceOf" stringvalue="org.netbeans.lib.editor.hyperlink.spi.HyperlinkProvider"/>
+                    </file>
+                </folder>
+            </folder>
+            <folder name="ditamap+xml">
+                <folder name="HyperlinkProviders">
+                    <file name="DitaHyperLinkProvider.instance">
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.hyperlink.ImageHyperLink"/>
+                        <attr name="instanceOf" stringvalue="org.netbeans.lib.editor.hyperlink.spi.HyperlinkProvider"/>
+                    </file>
+                </folder>
+            </folder>
+            <folder name="x-java">
+                <folder name="HyperlinkProviders">
+                    <file name="DitaHyperLinkProvider.instance" url="DitaHyperLinkProvider.instance">
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.hyperlink.ImageHyperLink"/>
+                        <attr name="instanceOf" stringvalue="org.netbeans.lib.editor.hyperlink.spi.HyperlinkProvider"/>
+                    </file>
+                </folder>
+            </folder>
+            <folder name="xml">
+                <folder name="HyperlinkProviders">
+                    <file name="DitaHyperLinkProvider.instance" url="DitaHyperLinkProvider.instance">
+                        <attr name="instanceClass" stringvalue="org.netbeans.modules.hyperlink.ImageHyperLink"/>
+                        <attr name="instanceOf" stringvalue="org.netbeans.lib.editor.hyperlink.spi.HyperlinkProvider"/>
+                    </file>
+                </folder>
+            </folder>
+        </folder>
+    </folder>
+</filesystem>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN"
+"../../dtd/topic.dtd">
+<topic id="module-info" xml:lang="en-us">
+    <title>Module XXX</title>
+    <body>
+        <p>
+            <table>
+                <title>Module Information</title>
+                <tgroup cols="2">
+                    <tbody>
+                        <row>
+                            <entry><b>Title</b></entry>
+                            <entry>Funtionality XXXX</entry>
+                        </row>
+                        <row>
+                            <entry><b>Module ID</b></entry>
+                            <entry>com.rr.perf.tbapassoff</entry>
+                        </row>
+                        <row>
+                            <entry><b>Module Version</b></entry>
+                            <entry>1.4</entry>
+                        </row>
+                        <row>
+                            <entry><b>User Authority</b></entry>
+                            <entry>Dave Widdowson</entry>
+                        </row>
+                        <row>
+                            <entry><b>Computing Authority</b></entry>
+                            <entry>Matt Wood</entry>
+                        </row>
+                        <row>
+                            <entry><b>Technical Authority</b></entry>
+                            <entry>Owen Cumpson</entry>
+                        </row>
+                        <row>
+                            <entry><b>Team Leader</b></entry>
+                            <entry>Nicolas Balkota</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </p>
+        <p>
+            <table>
+                <title>Module history.</title>
+                <tgroup cols="2">
+                    <thead>
+                        <row>
+                            <entry>Date</entry>
+                            <entry>Version</entry>
+                            <entry>Description</entry>
+                            <entry>Phobos Release</entry>
+                        </row>
+                    </thead>
+                    <tbody>
+                        <row>
+                            <entry>15 June 2012</entry>
+                            <entry>1.4</entry>
+                            <entry>Improvements resulting from user feedback.</entry>
+                            <entry>8.6.7</entry>
+                        </row>
+                        <row>
+                            <entry>29 June 2012</entry>
+                            <entry>1.5</entry>
+                            <entry>Improvements resulting from user feedback.</entry>
+                            <entry>8.6.8</entry>
+                        </row>
+                    </tbody>
+                </tgroup>
+            </table>
+        </p>
+    </body>
+</topic>

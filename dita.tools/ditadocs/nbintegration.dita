@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE topic PUBLIC "-//OASIS//DTD DITA Topic//EN"
+"../../dtd/topic.dtd">
+<topic id="nbintegration" xml:lang="en-us" >
+    <title>Integrating DITA into NetBeans</title>
+    <body>
+        <section>
+            <title>Integration with NetBeans</title>
+            <p>
+                The NetBeans editor provides many powerful features for editing many
+                files and format. In particular it support xml very well.
+            </p>
+            <p>
+                There are two ways to integrate DITA with NetBeans.
+            </p>
+            <p>
+                The first must be done before this DITA module can process the documentation. Select
+                <menucascade>
+                    <uicontrol>Tools</uicontrol>
+                    <uicontrol>Options</uicontrol>
+                    <uicontrol>DITA</uicontrol>
+                </menucascade>
+                and define the installed path for the DITA Open Toolkit.
+            </p>
+            <p>
+                The second involves registering the DITA xml definition with NetBeans so that
+                the editor can provide hints and auto-completion of the tags. Select
+                <menucascade>
+                    <uicontrol>Tools</uicontrol>
+                    <uicontrol>DTDs and XML Schemas</uicontrol>
+                </menucascade> follow these steps.
+                <ol>
+                    <li>Click <b>Add Catalogue</b></li>
+                    <li>In the dialog click <b>Browse</b></li>
+                    <li>Browse to the root directory of the DITA Open Toolkit.</li>
+                    <li>Select the file <b>catalog-dita.xml</b></li>
+                    <li>Click OK.</li>
+                    <li>Now open a dita file and auto-completion will be enabled.</li>
+                </ol>
+            </p>
+
+        </section>
+    </body>
+</topic>
