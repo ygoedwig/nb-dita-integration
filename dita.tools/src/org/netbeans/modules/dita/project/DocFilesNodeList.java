@@ -4,7 +4,6 @@
  */
 package org.netbeans.modules.dita.project;
 
-import java.awt.Image;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -13,10 +12,8 @@ import org.netbeans.api.project.Project;
 import org.netbeans.spi.project.ui.support.NodeList;
 import org.openide.filesystems.FileObject;
 import org.openide.loaders.DataFolder;
-import org.openide.nodes.FilterNode;
 import org.openide.nodes.Node;
 import org.openide.util.ChangeSupport;
-import org.openide.util.ImageUtilities;
 
 /**
  *
@@ -58,24 +55,7 @@ public class DocFilesNodeList implements NodeList<FileObject> {
         DataFolder folder = DataFolder.findFolder(key);
         Node folderNode = folder.getNodeDelegate();
 
-        folderNode = new FilterNode(folderNode) {
-            @Override
-            public String getDisplayName() {
-                return "Dita Docs";
-            }
-
-            @Override
-            public Image getIcon(int type) {
-                return ImageUtilities.loadImage("org/netbeans/modules/dita/resources/dita.png");
-            }
-
-            @Override
-            public Image getOpenedIcon(int type) {
-                return getIcon(type);
-            }
-        };
-
-        return folderNode.cloneNode();
+        return new DocsFolderNode(folderNode);
     }
 
     @Override

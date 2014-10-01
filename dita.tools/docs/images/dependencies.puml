@@ -1,0 +1,47 @@
+@startuml
+skinparam state {
+ArrowColor White
+}
+state "DITA Tools" as DITATools {
+}
+
+state "NetbeansUI" as NetbeansUI {
+   state "org.openide.awt" as org.openide.awt
+   state "org.openide.dialogs" as org.openide.dialogs
+   state "org.openide.windows" as org.openide.windows
+}
+
+state "Netbeans" as Netbeans {
+   state "org.openide.actions" as org.openide.actions
+   state "org.openide.execution" as org.openide.execution
+   org.openide.actions --> org.openide.execution
+   state "org.openide.filesystems" as org.openide.filesystems
+   state "org.openide.loaders" as org.openide.loaders
+   org.openide.filesystems --> org.openide.loaders
+   state "org.openide.nodes" as org.openide.nodes
+   state "org.openide.text" as org.openide.text
+   org.openide.nodes --> org.openide.text
+   state "org.openide.util" as org.openide.util
+   state "org.openide.util.lookup" as org.openide.util.lookup
+   org.openide.util --> org.openide.util.lookup
+}
+
+state "Other" as Other {
+   state "org.apache.tools.ant.module" as org.apache.tools.ant.module
+   state "org.netbeans.api.xml" as org.netbeans.api.xml
+   org.apache.tools.ant.module --> org.netbeans.api.xml
+   state "org.netbeans.modules.javahelp" as org.netbeans.modules.javahelp
+   state "org.netbeans.modules.lexer" as org.netbeans.modules.lexer
+   org.netbeans.modules.javahelp --> org.netbeans.modules.lexer
+   state "org.netbeans.modules.options.api" as org.netbeans.modules.options.api
+   state "org.netbeans.modules.project.ant" as org.netbeans.modules.project.ant
+   org.netbeans.modules.options.api --> org.netbeans.modules.project.ant
+   state "org.netbeans.modules.projectapi" as org.netbeans.modules.projectapi
+   state "org.netbeans.modules.projectuiapi" as org.netbeans.modules.projectuiapi
+   org.netbeans.modules.projectapi --> org.netbeans.modules.projectuiapi
+}
+
+DITATools --> NetbeansUI
+NetbeansUI --> Netbeans
+Netbeans --> Other
+@enduml
