@@ -10,7 +10,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.swing.AbstractAction;
 import javax.swing.Action;
 import static javax.swing.Action.NAME;
@@ -36,7 +38,8 @@ import org.w3c.dom.NodeList;
 
 /**
  *
- * @author u8018815
+ * @author u8018815 For every selected project, the codebasename will be
+ * replaced by the Module name when generating other module puml files
  */
 @ActionID(id = "GenerateDependencyAction", category = "ProjectActions")
 @ActionRegistration(displayName = "GenerateDependencyAction", lazy = false)
@@ -56,8 +59,10 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
     private static final class ContextAction extends AbstractAction {
 
         private final List<Project> p;
+        private Map<String, String> moduleNames;
 
         public ContextAction(Lookup context) {
+            moduleNames = new HashMap<String, String>();
             p = new ArrayList<Project>(context.lookupAll(Project.class));
 
             if (p.isEmpty()) {
@@ -70,10 +75,17 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
 
         public @Override
         void actionPerformed(ActionEvent e) {
+
+            Map<Project, List<String>> allProjDeps = new HashMap<Project, List<String>>();
+
             for (Project basep : p) {
                 List<String> deps = findAllDependencies(basep);
+                allProjDeps.put(basep, deps);
+            }
+
+            for (Project basep : p) {
                 try {
-                    writeOutDependencyPUML(deps, basep);
+                    writeOutDependencyPUML(allProjDeps.get(basep), basep);
                 } catch (IOException ex) {
                     Exceptions.printStackTrace(ex);
                 }
@@ -120,6 +132,19 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
             }
 
             Document document = parser.getDocument();
+
+            { //Add to moduleNames mapping
+                NodeList dataNode = document.getElementsByTagName("data");
+                NodeList childNodes = dataNode.item(0).getChildNodes();
+                for (int j = 0; j < childNodes.getLength(); j++) {
+                    String nodeName = childNodes.item(j).getLocalName();
+                    if (nodeName != null && nodeName.equals("code-name-base")) {
+                        Node valNode = childNodes.item(j).getFirstChild();
+                        moduleNames.put(valNode.getNodeValue(), ProjectUtils.getInformation(p).getDisplayName());
+                    }
+                }
+            }
+
             NodeList depNodes = document.getElementsByTagName("dependency");
             for (int i = 0; i < depNodes.getLength(); i++) {
                 NodeList childNodes = depNodes.item(i).getChildNodes();
@@ -165,6 +190,7 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
             b.append("@startuml\n");
             b.append("skinparam state {\n");
             b.append("ArrowColor White\n");
+            b.append("FontName Impact\n");
             b.append("}\n");
 
             b.append("state \"" + ProjectUtils.getInformation(p).getDisplayName() + "\" as " + fixUpString(ProjectUtils.getInformation(p).getDisplayName()) + " {\n}\n\n");
@@ -235,9 +261,9 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
                 //We don't want more than 5 columns
                 int depth = (catDeps.size() / 5) + 1;
 
-                b.append("   state \"" + catDeps.get(i) + "\" as " + fixUpString(catDeps.get(i)) + "\n");
+                b.append("   state \"" + getRealName(catDeps.get(i)) + "\" as " + fixUpString(getRealName(catDeps.get(i))) + "\n");
                 if (i % depth != 0) {
-                    b.append("   " + fixUpString(catDeps.get(i - 1)) + " --> " + fixUpString(catDeps.get(i)) + "\n");
+                    b.append("   " + fixUpString(getRealName(catDeps.get(i - 1))) + " --> " + fixUpString(getRealName(catDeps.get(i))) + "\n");
                 }
             }
             b.append("}\n\n");
@@ -245,7 +271,14 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
         }
 
         private String fixUpString(String in) {
-            return in.replace(" ", "").replace("-", "");
+            return in.replace(" ", "").replace("-", "").replace("(", "").replace(")", "");
+        }
+
+        private String getRealName(String codeBaseName) {
+            if (moduleNames.containsKey(codeBaseName)) {
+                return moduleNames.get(codeBaseName);
+            }
+            return codeBaseName;
         }
     }
 
