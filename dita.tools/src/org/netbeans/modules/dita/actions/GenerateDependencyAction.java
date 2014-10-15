@@ -23,12 +23,6 @@ import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionRegistration;
 import org.openide.awt.DynamicMenuContent;
-import org.openide.cookies.LineCookie;
-import org.openide.filesystems.FileObject;
-import org.openide.filesystems.FileUtil;
-import org.openide.loaders.DataObject;
-import org.openide.loaders.DataObjectNotFoundException;
-import org.openide.text.Line;
 import org.openide.util.ContextAwareAction;
 import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
@@ -58,19 +52,22 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
 
     private static final class ContextAction extends AbstractAction {
 
-        private final List<Project> p;
+        private final List<Project> selectedProjects;
         private Map<String, String> moduleNames;
+        private Map<String, String> codeNameBases;
 
         public ContextAction(Lookup context) {
             moduleNames = new HashMap<String, String>();
-            p = new ArrayList<Project>(context.lookupAll(Project.class));
+            codeNameBases = new HashMap<String, String>();
 
-            if (p.isEmpty()) {
+            selectedProjects = new ArrayList<Project>(context.lookupAll(Project.class));
+
+            if (selectedProjects.isEmpty()) {
                 return;
             }
             setEnabled(true);
             putValue(DynamicMenuContent.HIDE_WHEN_DISABLED, true);
-            putValue(NAME, "&Generate Dependency Info ");
+            putValue(NAME, "&Generate Dependency Info");
         }
 
         public @Override
@@ -78,21 +75,23 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
 
             Map<Project, List<String>> allProjDeps = new HashMap<Project, List<String>>();
 
-            for (Project basep : p) {
-                List<String> deps = findAllDependencies(basep);
-                allProjDeps.put(basep, deps);
+            for (Project project : selectedProjects) {
+                allProjDeps.put(project, findAllDependencies(project));
             }
 
-            for (Project basep : p) {
+            Map<Project, List<String>> reversedProjDeps = getDependentModuleInfo(allProjDeps);
+
+            for (Project project : selectedProjects) {
                 try {
-                    writeOutDependencyPUML(allProjDeps.get(basep), basep);
+                    writeOutDependencyPUML(allProjDeps.get(project), project, "dependencies.puml", false);
+                    writeOutDependencyPUML(reversedProjDeps.get(project), project, "dependents.puml", true);
                 } catch (IOException ex) {
                     Exceptions.printStackTrace(ex);
                 }
             }
         }
 
-        private void writeOutDependencyPUML(List<String> deps, Project p) throws IOException {
+        private void writeOutDependencyPUML(List<String> deps, Project p, String fileName, boolean reverse) throws IOException {
             File docdir = new File(p.getProjectDirectory().getPath(), "docs");
 
             if (!docdir.exists()) {
@@ -104,11 +103,9 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
                 imagedir.mkdirs();
             }
 
-            File out = new File(imagedir, "dependencies.puml");
-            StringBuilder b = new StringBuilder();
+            File out = new File(imagedir, fileName);
 
-            writeStateOut(deps, b, out, p);
-            //openFileInEditor(out);
+            writeStateBasedPUML(deps, out, p, reverse);
         }
 
         private List<String> findAllDependencies(Project p) {
@@ -140,7 +137,8 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
                     String nodeName = childNodes.item(j).getLocalName();
                     if (nodeName != null && nodeName.equals("code-name-base")) {
                         Node valNode = childNodes.item(j).getFirstChild();
-                        moduleNames.put(valNode.getNodeValue(), ProjectUtils.getInformation(p).getDisplayName());
+                        moduleNames.put(valNode.getNodeValue(), getProjectDisplayString(p));
+                        codeNameBases.put(getProjectDisplayString(p), valNode.getNodeValue());
                     }
                 }
             }
@@ -174,66 +172,50 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
             return res;
         }
 
-        private void openFileInEditor(File out) {
-            FileObject item = FileUtil.toFileObject(out);
-            DataObject dao;
-            try {
-                dao = DataObject.find(item);
-            } catch (DataObjectNotFoundException ex) {
-                return;
-            }
-            LineCookie lc = dao.getCookie(LineCookie.class);
-            lc.getLineSet().getCurrent(0).show(Line.ShowOpenType.REUSE, Line.ShowVisibilityType.FRONT);
+        private String getProjectDisplayString(Project p) {
+            return ProjectUtils.getInformation(p).getDisplayName();
         }
 
-        private void writeStateOut(List<String> deps, StringBuilder b, File out, Project p) throws IOException {
-            b.append("@startuml\n");
-            b.append("skinparam state {\n");
-            b.append("ArrowColor White\n");
-            b.append("FontName Impact\n");
-            b.append("}\n");
-
-            b.append("state \"" + ProjectUtils.getInformation(p).getDisplayName() + "\" as " + fixUpString(ProjectUtils.getInformation(p).getDisplayName()) + " {\n}\n\n");
-            List<String> states = addStates(deps, b);
-            if (states.size() > 0) {
-                b.append(fixUpString(ProjectUtils.getInformation(p).getDisplayName()) + " --> " + states.get(0) + "\n");
-            }
-            for (int i = 1; i < states.size(); i++) {
-                b.append(states.get(i - 1) + " --> " + states.get(i) + "\n");
-            }
-
-            b.append("@enduml\n");
-            if (out.exists()) {
-                out.delete();
-            }
-
-            FileOutputStream fos = null;
-            try {
-                out.createNewFile();
-                fos = new FileOutputStream(out);
-                fos.write(b.toString().getBytes());
-            } finally {
-                if (fos != null) {
-                    fos.close();
-                }
-            }
+        private String getFixedProjectDisplayString(Project p) {
+            return fixUpString(getProjectDisplayString(p));
         }
 
-        private List<String> addStates(List<String> deps, StringBuilder b) {
+        private void writeStateBasedPUML(List<String> dependencies, File out, Project p, boolean reverse) throws IOException {
+            StringBuilder sb = new StringBuilder();
+            sb.append("@startuml\n");
+            sb.append("skinparam state {\n");
+            sb.append("ArrowColor White\n");
+            sb.append("FontName Impact\n");
+            sb.append("}\n");
+
+            sb.append("state \"");
+            sb.append(getProjectDisplayString(p));
+            sb.append("\" as ");
+            sb.append(getFixedProjectDisplayString(p));
+            sb.append(" {\n}\n\n");
+            List<String> states = writeSubStates(dependencies, sb);
+            writeSubStateConnections(states, p, reverse, sb);
+
+            sb.append("@enduml\n");
+
+            writeStringToFile(out, sb);
+        }
+
+        private List<String> writeSubStates(List<String> deps, StringBuilder b) {
             List<String> stateList = new ArrayList<String>();
-            if (addState(deps, b, DependencyCategory.PHOBOS, "Phobos")) {
+            if (addState(getDependenciesOfType(deps, DependencyCategory.PHOBOS), b, "Phobos")) {
                 stateList.add("Phobos");
             }
 
-            if (addState(deps, b, DependencyCategory.NETBEANSUI, "NetbeansUI")) {
+            if (addState(getDependenciesOfType(deps, DependencyCategory.NETBEANSUI), b, "NetbeansUI")) {
                 stateList.add("NetbeansUI");
             }
 
-            if (addState(deps, b, DependencyCategory.NETBEANS, "Netbeans")) {
+            if (addState(getDependenciesOfType(deps, DependencyCategory.NETBEANS), b, "Netbeans")) {
                 stateList.add("Netbeans");
             }
 
-            if (addState(deps, b, DependencyCategory.OTHER, "Other")) {
+            if (addState(getDependenciesOfType(deps, DependencyCategory.OTHER), b, "Other")) {
                 stateList.add("Other");
             }
 
@@ -250,23 +232,34 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
             return res;
         }
 
-        private boolean addState(List<String> deps, StringBuilder b, DependencyCategory dependencyCategory, String displayName) {
-            List<String> catDeps = getDependenciesOfType(deps, dependencyCategory);
-
-            if (catDeps.isEmpty()) {
+        private boolean addState(List<String> dependencies, StringBuilder sb, String stateDisplayName) {
+            if (dependencies.isEmpty()) {
                 return false;
             }
-            b.append("state \"" + displayName + "\" as " + displayName + " {\n");
-            for (int i = 0; i < catDeps.size(); i++) {
+            sb.append("state \"");
+            sb.append(stateDisplayName);
+            sb.append("\" as ");
+            sb.append(stateDisplayName);
+            sb.append(" {\n");
+            for (int i = 0; i < dependencies.size(); i++) {
                 //We don't want more than 5 columns
-                int depth = (catDeps.size() / 5) + 1;
+                int depth = (dependencies.size() / 5) + 1;
 
-                b.append("   state \"" + getRealName(catDeps.get(i)) + "\" as " + fixUpString(getRealName(catDeps.get(i))) + "\n");
+                sb.append("   state \"");
+                sb.append(getModuleName(dependencies.get(i)));
+                sb.append("\" as ");
+                sb.append(getFixedModuleName(dependencies.get(i)));
+                sb.append("\n");
+
                 if (i % depth != 0) {
-                    b.append("   " + fixUpString(getRealName(catDeps.get(i - 1))) + " --> " + fixUpString(getRealName(catDeps.get(i))) + "\n");
+                    sb.append("   ");
+                    sb.append(getFixedModuleName(dependencies.get(i - 1)));
+                    sb.append(" --> ");
+                    sb.append(getFixedModuleName(dependencies.get(i)));
+                    sb.append("\n");
                 }
             }
-            b.append("}\n\n");
+            sb.append("}\n\n");
             return true;
         }
 
@@ -274,11 +267,86 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
             return in.replace(" ", "").replace("-", "").replace("(", "").replace(")", "");
         }
 
-        private String getRealName(String codeBaseName) {
+        private String getCodeNameBase(Project proj) {
+            return getCodeNameBase(getProjectDisplayString(proj));
+        }
+
+        private String getCodeNameBase(String moduleName) {
+            if (codeNameBases.containsKey(moduleName)) {
+                return codeNameBases.get(moduleName);
+            }
+            return moduleName;
+        }
+
+        private String getFixedModuleName(String codeBaseName) {
+            return fixUpString(getModuleName(codeBaseName));
+        }
+
+        private String getModuleName(String codeBaseName) {
             if (moduleNames.containsKey(codeBaseName)) {
                 return moduleNames.get(codeBaseName);
             }
             return codeBaseName;
+        }
+
+        private Map<Project, List<String>> getDependentModuleInfo(Map<Project, List<String>> allProjDeps) {
+            Map<Project, List<String>> reverseDeps = new HashMap<Project, List<String>>();
+            for (Project p : allProjDeps.keySet()) {
+                reverseDeps.put(p, new ArrayList<String>());
+                String codeNameBase = getCodeNameBase(getCodeNameBase(p));
+                for (Project depProj : allProjDeps.keySet()) {
+                    if (allProjDeps.get(depProj).contains(codeNameBase)) {
+                        reverseDeps.get(p).add(getCodeNameBase(depProj));
+                    }
+                }
+            }
+            return reverseDeps;
+        }
+
+        private void writeSubStateConnections(List<String> states, Project p, boolean reverse, StringBuilder sb) {
+            if (states.size() > 0) {
+                if (reverse) {
+                    sb.append(states.get(0));
+                    sb.append(" --> ");
+                    sb.append(getFixedProjectDisplayString(p));
+                    sb.append("\n");
+                } else {
+                    sb.append(getFixedProjectDisplayString(p));
+                    sb.append(" --> ");
+                    sb.append(states.get(0));
+                    sb.append("\n");
+                }
+            }
+            for (int i = 1; i < states.size(); i++) {
+                if (reverse) {
+                    sb.append(states.get(i));
+                    sb.append(" --> ");
+                    sb.append(states.get(i - 1));
+                    sb.append("\n");
+                } else {
+                    sb.append(states.get(i - 1));
+                    sb.append(" --> ");
+                    sb.append(states.get(i));
+                    sb.append("\n");
+                }
+            }
+        }
+
+        private void writeStringToFile(File out, StringBuilder sb) throws IOException {
+            if (out.exists()) {
+                out.delete();
+            }
+
+            FileOutputStream fos = null;
+            try {
+                out.createNewFile();
+                fos = new FileOutputStream(out);
+                fos.write(sb.toString().getBytes());
+            } finally {
+                if (fos != null) {
+                    fos.close();
+                }
+            }
         }
     }
 
