@@ -357,11 +357,15 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
 
         if (dep.contains("org.openide.windows")
                 || dep.contains("org.openide.dialogs")
+                || dep.contains("org.jdesktop")
                 || dep.contains("org.openide.awt")) {
             return DependencyCategory.NETBEANSUI;
         }
 
         if (dep.contains("org.openide")) {
+            return DependencyCategory.NETBEANS;
+        }
+        if (dep.contains("org.netbeans")) {
             return DependencyCategory.NETBEANS;
         }
         return DependencyCategory.OTHER;
