@@ -264,7 +264,7 @@ public class GenerateDependencyAction extends AbstractAction implements ContextA
         }
 
         private String fixUpString(String in) {
-            return in.replace(" ", "").replace("-", "").replace("(", "").replace(")", "");
+            return in.replace(" ", "").replace("-", "").replace("#", "").replace("(", "").replace(")", "");
         }
 
         private String getCodeNameBase(Project proj) {
